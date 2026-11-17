@@ -38,7 +38,6 @@ SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null)"
 [ -n "$SCRIPT_PATH" ] || SCRIPT_PATH="$0"
 
 mkdir -p "$STATE_DIR" 2>/dev/null
-chmod 700 "$STATE_DIR" 2>/dev/null   # state (PID, lock, version) is private to this Termux user
 
 say()   { printf '%s\n' "$*"; }
 warn()  { printf '%s\n' "$*" >&2; }

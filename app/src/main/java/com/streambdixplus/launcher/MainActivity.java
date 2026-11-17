@@ -865,15 +865,7 @@ public class MainActivity extends Activity {
 
     private void updateServerUrl(String previewText) {
         Matcher m = PORT_PATTERN.matcher(nz(previewText));
-        if (m.find()) {
-            // The text comes from terminal output (untrusted): accept only a real TCP port.
-            try {
-                int port = Integer.parseInt(m.group(1));
-                if (port >= 1 && port <= 65535) serverPort = String.valueOf(port);
-            } catch (NumberFormatException ignored) {
-                // keep the previous port
-            }
-        }
+        if (m.find()) serverPort = m.group(1);
         urlView.setText(webUiUrl());
         manifestView.setText(manifestUrl());
     }

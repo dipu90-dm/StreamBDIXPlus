@@ -10,15 +10,11 @@ android {
         applicationId 'com.streambdixplus.launcher'
         minSdk 28
         targetSdk 28
-        versionCode 8
-        versionName '1.5.4'
+        versionCode 7
+        versionName '1.5.3'
     }
 
     buildTypes {
-        debug {
-            // CI publishes the debug build as the APK: it must not be debuggable.
-            debuggable false
-        }
         release {
             minifyEnabled false
         }

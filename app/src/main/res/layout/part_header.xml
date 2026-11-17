@@ -48,7 +48,7 @@
             android:paddingEnd="14dp"
             android:paddingStart="14dp"
             android:paddingTop="3dp"
-            android:text="v1.5.4"
+            android:text="v1.5.3"
             android:textColor="@color/text"
             android:textSize="13sp" />
     </LinearLayout>
