@@ -3,6 +3,8 @@
 #
 # Usage: start-streambdixplus.sh [start|status|stop]
 #   start   (default) run the NEWEST StreamBDIX+ from npm unless an instance is already running
+#   start-bg  same as start, but fully detached: creates the tmux session and returns at once, without
+#           attaching, so Termux never has to come to the front (used by the launcher's Start button)
 #   status  print machine-readable status lines (used by the app)
 #   stop    send SIGTERM to a running instance (only ever on explicit request)
 #   quit    close Termux completely (kills tmux and the Termux app process); the launcher runs it after "stop"
@@ -36,6 +38,7 @@ SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null)"
 [ -n "$SCRIPT_PATH" ] || SCRIPT_PATH="$0"
 
 mkdir -p "$STATE_DIR" 2>/dev/null
+chmod 700 "$STATE_DIR" 2>/dev/null   # state (PID, lock, version) is private to this Termux user
 
 say()   { printf '%s\n' "$*"; }
 warn()  { printf '%s\n' "$*" >&2; }
@@ -322,6 +325,43 @@ cmd_start() {
   fi
 }
 
+# Like cmd_start, but never attaches: the tmux session is created detached and this script exits.
+# Needs tmux (the launcher only calls it when "TMUX=installed" was reported by status).
+cmd_start_bg() {
+  if ! acquire_lock; then
+    say "Another start is already in progress. Not starting a second instance."
+    exit 0
+  fi
+  trap release_lock EXIT
+
+  if is_running; then
+    say "StreamBDIX+ is already running (PID: $(collect_pids | tr '\n' ' ')). Not starting another instance."
+    exit 0
+  fi
+
+  command -v node >/dev/null 2>&1 || { warn "ERROR: Node.js not found. In Termux run: pkg install nodejs"; exit 20; }
+  command -v npx  >/dev/null 2>&1 || { warn "ERROR: npx not found. It ships with npm. In Termux run: pkg install nodejs"; exit 21; }
+  have_tmux       || { warn "ERROR: tmux not found. In Termux run: pkg install tmux"; exit 33; }
+
+  tmux_session_exists && tmux kill-session -t "=$SESSION_NAME" 2>/dev/null
+  unset TMUX
+  tmux new-session -d -x 56 -y 40 -s "$SESSION_NAME" -c "${HOME:-/}" \
+    "exec $(printf '%q' "$BASH") $(printf '%q' "$SCRIPT_PATH") __run" \
+    || { warn "ERROR: Could not create the tmux session."; exit 31; }
+  local i
+  for i in $(seq 1 50); do
+    [ -n "$(runner_pid)" ] && break
+    sleep 0.1
+  done
+  if [ -z "$(runner_pid)" ]; then
+    tmux kill-session -t "=$SESSION_NAME" 2>/dev/null
+    warn "ERROR: The StreamBDIX+ runner did not start inside tmux."
+    exit 32
+  fi
+  say "StreamBDIX+ started in the background (tmux session: $SESSION_NAME)."
+  exit 0
+}
+
 cmd_status() {
   local pids rp pid age last="" np ver now st
   pids=$(collect_pids | tr '\n' ' ')
@@ -412,9 +452,10 @@ cmd_quit() {
 
 case "${1:-start}" in
   start)  cmd_start ;;
+  start-bg) cmd_start_bg ;;
   quit)   cmd_quit ;;
   status) cmd_status ;;
   stop)   cmd_stop ;;
   __run)  cmd_run ;;
-  *)      warn "Usage: $SELF_NAME [start|status|stop|quit]"; exit 64 ;;
+  *)      warn "Usage: $SELF_NAME [start|start-bg|status|stop|quit]"; exit 64 ;;
 esac

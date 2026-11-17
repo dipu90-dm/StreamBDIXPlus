@@ -50,7 +50,7 @@ final class TermuxBridge {
     static final String SELF_GRANT_COMMAND =
             "pkg install -y android-tools && adb connect 127.0.0.1:5555"
             + " && adb -s 127.0.0.1:5555 shell pm grant com.streambdixplus.launcher " + PERMISSION_RUN_COMMAND
-            + " && echo \"Done. Go back to StreamBDIX+ Launcher.\"";
+            + " && { adb disconnect 127.0.0.1:5555 >/dev/null 2>&1; echo \"Done. Go back to StreamBDIX+ Launcher.\"; }";
 
     /** Same command wrapped for 'bash -c': saves the helper script ($1), runs the setup, keeps the window open. */
     private static final String SETUP_WRAPPER =

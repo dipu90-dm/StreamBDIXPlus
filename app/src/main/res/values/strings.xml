@@ -26,11 +26,12 @@
     <string name="preview_empty">No live output yet. Press Start Operation: the output shows here once StreamBDIX+ runs inside tmux.</string>
     <string name="preview_update_script">Tap Install / update script to enable the live preview.</string>
     <string name="msg_busy">Still waiting for Termux…</string>
+    <string name="msg_starting_bg">Starting in the background. It checks npm for the newest StreamBDIX+ and starts it. A second instance is never started.</string>
     <string name="msg_starting">Opening Termux. It checks npm for the newest StreamBDIX+ and starts it. A second instance is never started.</string>
-    <string name="msg_attached">Already running (PID: %1$s). Opening your previous Termux session; no new session was started. If Termux shows a different session, swipe in from its left edge, or run: tmux attach -t streambdixplus</string>
-    <string name="msg_already_other">Already running (PID: %1$s). Opening your previous Termux session; no new session was started. If Termux shows a different session, swipe in from its left edge and pick the one running StreamBDIX+.</string>
+    <string name="msg_attached">Already running (PID: %1$s). Nothing new was started. To watch it in Termux, tap Open Termux and run: tmux attach -t streambdixplus</string>
+    <string name="msg_already_other">Already running (PID: %1$s). Nothing new was started. It runs in another Termux session; open Termux to see it.</string>
     <string name="msg_permission_needed">Permission needed: tap Start and follow the steps shown.</string>
-    <string name="toast_already_running">StreamBDIX+ is already running. Opening the previous Termux session…</string>
+    <string name="toast_already_running">StreamBDIX+ is already running.</string>
     <string name="msg_install_ok">Script installed to ~/start-streambdixplus.sh in Termux.</string>
 
     <string name="confirm_stop_title">Stop StreamBDIX+?</string>

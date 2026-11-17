@@ -52,7 +52,7 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends Activity {
 
-    private enum Purpose { REFRESH, START, STOP, INSTALL, PROBE }
+    private enum Purpose { REFRESH, START, START_BG, STOP, INSTALL, PROBE }
 
     private static final int REQ_PERMISSION = 1001;
     private static final long RESULT_TIMEOUT_MS = 15000L;
@@ -365,6 +365,9 @@ public class MainActivity extends Activity {
             case STOP:
                 error = TermuxBridge.runBackground(this, "stop", resultIntent);
                 break;
+            case START_BG:
+                error = TermuxBridge.runBackground(this, "start-bg", resultIntent);
+                break;
             default: // REFRESH and START both begin with a status check
                 error = TermuxBridge.runBackground(this, "status", resultIntent);
                 break;
@@ -645,6 +648,18 @@ public class MainActivity extends Activity {
             return;
         }
 
+        if (purpose == Purpose.START_BG) {
+            if (exitCode != 0) {
+                showError(getString(R.string.err_script_failed, exitCode, stderr.isEmpty() ? stdout : stderr));
+                return;
+            }
+            // Started detached in tmux. Termux stays where it is; confirm with a status check shortly.
+            showState(getString(R.string.status_starting), getString(R.string.msg_starting_bg), R.color.status_accent);
+            handler.removeCallbacks(autoRefreshRunnable);
+            handler.postDelayed(autoRefreshRunnable, 2000L);
+            return;
+        }
+
         String kvText = stdout;
         String preview = null;   // null = old script without preview support
         int marker = stdout.indexOf(PREVIEW_MARKER);
@@ -724,13 +739,12 @@ public class MainActivity extends Activity {
             return;
         }
         // START while already running: never start a second instance and never create a new Termux
-        // session (a foreground RUN_COMMAND always creates one). Tell the person, then bring Termux
-        // back to the front; it resumes the session that was in use last (the one running StreamBDIX+).
+        // session. Just tell the person; Termux is not brought to the front. The status keeps refreshing.
         int msg = "yes".equals(kv.get("ATTACHABLE")) ? R.string.msg_attached : R.string.msg_already_other;
         showState(getString(R.string.status_running), getString(msg, pids), R.color.status_ok);
         Toast.makeText(this, R.string.toast_already_running, Toast.LENGTH_LONG).show();
-        handler.removeCallbacks(openTermuxRunnable);
-        handler.postDelayed(openTermuxRunnable, 1200L);
+        handler.removeCallbacks(autoRefreshRunnable);
+        handler.postDelayed(autoRefreshRunnable, AUTO_REFRESH_MS);
     }
 
     private void onStopped(Purpose purpose, Map<String, String> kv) {
@@ -750,6 +764,13 @@ public class MainActivity extends Activity {
             showState(getString(R.string.status_stopped), detail, R.color.status_warn);
             return;
         }
+        if ("installed".equals(kv.get("TMUX"))) {
+            // Normal path: start detached in tmux, Termux stays in the background.
+            showState(getString(R.string.status_starting), getString(R.string.msg_starting_bg), R.color.status_accent);
+            perform(Purpose.START_BG, true);
+            return;
+        }
+        // No tmux (or an old helper script that does not report it): old behaviour, visible Termux session.
         String error = TermuxBridge.runForeground(this, "start");
         if (error != null) {
             showError(error);
@@ -844,7 +865,15 @@ public class MainActivity extends Activity {
 
     private void updateServerUrl(String previewText) {
         Matcher m = PORT_PATTERN.matcher(nz(previewText));
-        if (m.find()) serverPort = m.group(1);
+        if (m.find()) {
+            // The text comes from terminal output (untrusted): accept only a real TCP port.
+            try {
+                int port = Integer.parseInt(m.group(1));
+                if (port >= 1 && port <= 65535) serverPort = String.valueOf(port);
+            } catch (NumberFormatException ignored) {
+                // keep the previous port
+            }
+        }
         urlView.setText(webUiUrl());
         manifestView.setText(manifestUrl());
     }
