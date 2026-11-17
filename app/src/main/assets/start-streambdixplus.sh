@@ -5,6 +5,7 @@
 #   start   (default) run the NEWEST StreamBDIX+ from npm unless an instance is already running
 #   status  print machine-readable status lines (used by the app)
 #   stop    send SIGTERM to a running instance (only ever on explicit request)
+#   quit    close Termux completely (kills tmux and the Termux app process); the launcher runs it after "stop"
 #   __run   internal: resolves the newest version on npm and runs it inside the session. Do not call directly.
 #
 # Duplicate protection:
@@ -29,6 +30,7 @@ SELF_NAME="start-streambdixplus.sh"
 STATE_DIR="${HOME:-/data/data/com.termux/files/home}/.streambdixplus"
 PID_FILE="$STATE_DIR/runner.pid"
 VERSION_FILE="$STATE_DIR/version"
+STARTED_FILE="$STATE_DIR/started"
 LOCK_DIR="$STATE_DIR/start.lock"
 SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null)"
 [ -n "$SCRIPT_PATH" ] || SCRIPT_PATH="$0"
@@ -198,11 +200,12 @@ fmt_secs() {
 }
 
 # Last visible lines of the tmux session (plain text, no colours). Empty if there is no tmux session.
+# No "cut -c": it counts bytes and would slice multi-byte characters in half (shown as boxes in the app).
 preview_text() {
   tmux_session_exists || return 0
   { tmux capture-pane -p -J -t "=${SESSION_NAME}:" -S -40 2>/dev/null \
       || tmux capture-pane -p -J -t "${SESSION_NAME}:" -S -40 2>/dev/null; } \
-    | sed '/^[[:space:]]*$/d' | tail -n 10 | cut -c1-90
+    | sed '/^[[:space:]]*$/d' | tail -n 12
 }
 
 # ---------- newest version on npm ----------
@@ -237,6 +240,7 @@ cmd_run() {
   # A trap (not "ignore") keeps default SIGINT behaviour for npx/node, which are separate processes.
   trap ':' INT
   rm -f "$STATE_DIR/last_exit"
+  date +%s > "$STARTED_FILE"     # real wall-clock start; used for uptime and "Last Started"
   cd "${HOME:-/}" 2>/dev/null
   local ver spec
   say "Checking npm for the newest $PKG_NAME ..."
@@ -294,8 +298,8 @@ cmd_start() {
   if have_tmux; then
     # Nothing is running (checked above), so a leftover session is a dead shell. Remove it.
     tmux_session_exists && tmux kill-session -t "=$SESSION_NAME" 2>/dev/null
-    # 41 columns so the box fits the launcher's phone-sized live view (StreamBDIX+ shrinks to the terminal width).
-    tmux new-session -d -x 41 -y 40 -s "$SESSION_NAME" -c "${HOME:-/}" \
+    # 56 columns: wide enough for URLs on one line; the launcher wraps the text to its own width.
+    tmux new-session -d -x 56 -y 40 -s "$SESSION_NAME" -c "${HOME:-/}" \
       "exec $(printf '%q' "$BASH") $(printf '%q' "$SCRIPT_PATH") __run" \
       || fail 31 "Could not create the tmux session."
     local i
@@ -319,7 +323,7 @@ cmd_start() {
 }
 
 cmd_status() {
-  local pids rp pid age last="" np ver
+  local pids rp pid age last="" np ver now st
   pids=$(collect_pids | tr '\n' ' ')
   rp=$(runner_pid)
   if command -v node >/dev/null 2>&1; then echo "NODE=ok"; else echo "NODE=missing"; fi
@@ -328,10 +332,17 @@ cmd_status() {
   if [ -n "$pids" ] || [ -n "$rp" ]; then
     echo "STATE=RUNNING"
     pid=${rp:-${pids%% *}}
-    age=$(proc_age_secs "$pid" 2>/dev/null)
+    now=$(date +%s)
+    age=""
+    if [ -n "$rp" ] && [ -r "$STARTED_FILE" ]; then
+      read -r st 2>/dev/null < "$STARTED_FILE"
+      case "$st" in ''|*[!0-9]*) ;; *) [ "$st" -le "$now" ] && age=$(( now - st )) ;; esac
+    fi
+    # Manual runs have no start file: fall back to /proc (can be off if the device slept).
+    [ -n "$age" ] || age=$(proc_age_secs "$pid" 2>/dev/null)
     if [ -n "$age" ] && [ "$age" -ge 0 ] 2>/dev/null; then
       echo "UPTIME=$(fmt_secs "$age")"
-      echo "STARTED=$(( $(date +%s) - age ))"
+      echo "STARTED=$(( now - age ))"
     fi
     np=$(find_node_pids | head -n 1)
     echo "NODE_PID=${np:-${pids%% *}}"
@@ -383,10 +394,27 @@ cmd_stop() {
   exit 0
 }
 
+# Closes Termux: stops tmux, then kills the Termux app process (the process whose argv[0] is "com.termux").
+# Same Android user, so no special permission is needed. Anything still running in Termux ends with it.
+cmd_quit() {
+  local d pid
+  local -a argv
+  have_tmux && tmux kill-server 2>/dev/null
+  for d in /proc/[0-9]*; do
+    pid=${d#/proc/}
+    [ "$pid" = "$$" ] && continue
+    argv=()
+    mapfile -d '' -t argv 2>/dev/null < "$d/cmdline" || continue
+    [ "${argv[0]}" = "com.termux" ] && kill -9 "$pid" 2>/dev/null
+  done
+  exit 0
+}
+
 case "${1:-start}" in
   start)  cmd_start ;;
+  quit)   cmd_quit ;;
   status) cmd_status ;;
   stop)   cmd_stop ;;
   __run)  cmd_run ;;
-  *)      warn "Usage: $SELF_NAME [start|status|stop]"; exit 64 ;;
+  *)      warn "Usage: $SELF_NAME [start|status|stop|quit]"; exit 64 ;;
 esac

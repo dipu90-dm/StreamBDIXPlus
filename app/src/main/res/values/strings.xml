@@ -34,7 +34,7 @@
     <string name="msg_install_ok">Script installed to ~/start-streambdixplus.sh in Termux.</string>
 
     <string name="confirm_stop_title">Stop StreamBDIX+?</string>
-    <string name="confirm_stop_msg">This sends SIGTERM to the running StreamBDIX+ process.</string>
+    <string name="confirm_stop_msg">This stops the running StreamBDIX+ process (SIGTERM) and then closes Termux completely.</string>
 
     <!-- one-time setup -->
     <string name="msg_setup_probing">Checking whether Termux accepts commands from this app…</string>
@@ -76,7 +76,7 @@
 
     <!-- redesigned UI -->
     <string name="btn_start_sub">Run: npx streambdixplus@latest</string>
-    <string name="btn_stop_sub">Terminate the process</string>
+    <string name="btn_stop_sub">Stop the server and close Termux</string>
     <string name="btn_setup_sub">Prepare Termux environment</string>
     <string name="btn_install_sub">Get the latest StreamBDIX+ script</string>
     <string name="btn_status_sub">Verify server health and status</string>
@@ -100,7 +100,7 @@
     <string name="auto_scroll">Auto-scroll</string>
     <string name="footer_title">StreamBDIX+ Launcher v%1$s</string>
     <string name="footer_sub">Powered by Termux  \u2022  Built for StreamBDIX+</string>
-    <string name="msg_stopped_ok">StreamBDIX+ was stopped.</string>
+    <string name="msg_stopped_ok">Stopped. Termux was closed.</string>
     <string name="toast_log_copied">Logs copied</string>
     <string name="toast_manifest_copied">Manifest link copied. Paste it into Stremio.</string>
     <string name="toast_no_browser">No browser found on this device.</string>

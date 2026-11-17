@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.ColorStateList;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -19,8 +20,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.LeadingMarginSpan;
 import android.text.style.UnderlineSpan;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,8 +41,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -56,6 +61,12 @@ public class MainActivity extends Activity {
     private static final String PREVIEW_MARKER = "@@PREVIEW@@";
     private static final String DEFAULT_PORT = "7001";
     private static final String DASH = "\u2014";
+    private static final String PREFS = "launcher";
+    private static final String PREF_SCRIPT_FOR = "script_for_version";
+    private static final int MAX_LOG_LINES = 300;
+    private static final int MAX_LINE_CHARS = 300;
+    private static final Pattern ANSI_PATTERN = Pattern.compile("\u001B\\[[0-9;?]*[ -/]*[@-~]");
+    private static final Pattern BORDER_ONLY = Pattern.compile("^[-=_*+|~#.:\\s]+$");
     private static final Pattern URL_PATTERN = Pattern.compile("https?://[^\\s]+");
     private static final Pattern PORT_PATTERN =
             Pattern.compile("https?://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):(\\d{2,5})");
@@ -91,10 +102,25 @@ public class MainActivity extends Activity {
 
     private String appVersion = "";
     private String serverPort = DEFAULT_PORT;
-    private String logText = "";
-    private String clearedSnapshot;
     private String lastPreview = "";
     private boolean autoScroll = true;
+    private boolean autoInstallTried;
+    private long startedEpoch;                         // seconds, 0 = unknown / not running
+
+    // Live terminal: every line seen so far with the time the launcher first saw it.
+    private final List<String[]> logEntries = new ArrayList<>();   // {time, text}
+    private List<String> lastWindow = new ArrayList<>();
+    private int clearedUpTo;
+    private TextView manifestView;
+
+    private final Runnable uptimeTicker = new Runnable() {
+        @Override public void run() {
+            if (startedEpoch <= 0L) return;
+            long secs = System.currentTimeMillis() / 1000L - startedEpoch;
+            uptimeView.setText(formatUptime(secs));
+            handler.postDelayed(this, 1000L);
+        }
+    };
 
     private final Runnable timeoutRunnable = new Runnable() {
         @Override public void run() {
@@ -113,6 +139,16 @@ public class MainActivity extends Activity {
         @Override public void run() {
             if (pendingPurpose == null && receiverRegistered) {
                 perform(Purpose.REFRESH, true);
+            }
+        }
+    };
+
+    /** After Stop Server: closes Termux itself (no result is expected; the process is gone afterwards). */
+    private final Runnable closeTermuxRunnable = new Runnable() {
+        @Override public void run() {
+            if (TermuxBridge.isTermuxInstalled(MainActivity.this)
+                    && TermuxBridge.hasRunCommandPermission(MainActivity.this)) {
+                TermuxBridge.runBackground(MainActivity.this, "quit", null);
             }
         }
     };
@@ -154,6 +190,7 @@ public class MainActivity extends Activity {
         versionView = findViewById(R.id.tvVersion);
         lastStartedView = findViewById(R.id.tvLastStarted);
         urlView = findViewById(R.id.tvUrl);
+        manifestView = findViewById(R.id.tvManifest);
         connView = findViewById(R.id.tvConn);
         statusCard = findViewById(R.id.statusCard);
         statusRing = findViewById(R.id.statusRing);
@@ -185,8 +222,9 @@ public class MainActivity extends Activity {
         findViewById(R.id.btnManifest).setOnClickListener(
                 v -> copyToClipboard(manifestUrl(), R.string.toast_manifest_copied));
         findViewById(R.id.btnCopy).setOnClickListener(v -> {
-            if (logText.isEmpty()) return;
-            copyToClipboard(logText, R.string.toast_log_copied);
+            String text = visibleLogText();
+            if (text.isEmpty()) return;
+            copyToClipboard(text, R.string.toast_log_copied);
         });
         findViewById(R.id.btnClear).setOnClickListener(v -> clearLogs());
         collapseButton.setOnClickListener(v -> toggleTerminal());
@@ -221,6 +259,10 @@ public class MainActivity extends Activity {
         } else if (!TermuxBridge.hasRunCommandPermission(this)) {
             showState(getString(R.string.status_idle), getString(R.string.msg_permission_needed),
                     R.color.status_warn);
+        } else if (!autoInstallTried && !getPrefs().getString(PREF_SCRIPT_FOR, "").equals(appVersion)) {
+            // New launcher version: put the matching helper script into Termux first (once).
+            autoInstallTried = true;
+            perform(Purpose.INSTALL);
         } else {
             perform(Purpose.REFRESH);
         }
@@ -236,6 +278,7 @@ public class MainActivity extends Activity {
         handler.removeCallbacks(timeoutRunnable);
         handler.removeCallbacks(openTermuxRunnable);
         handler.removeCallbacks(autoRefreshRunnable);
+        handler.removeCallbacks(uptimeTicker);
         pendingPurpose = null;
         pendingRequestId = 0;
         dismissDialog();
@@ -592,6 +635,7 @@ public class MainActivity extends Activity {
 
         if (purpose == Purpose.INSTALL) {
             if (exitCode == 0) {
+                getPrefs().edit().putString(PREF_SCRIPT_FOR, appVersion).apply();
                 showState(getString(R.string.status_idle), getString(R.string.msg_install_ok),
                         R.color.status_ok);
                 perform(Purpose.REFRESH);
@@ -615,6 +659,8 @@ public class MainActivity extends Activity {
             if (stopped) {
                 showPreview(getString(R.string.preview_empty));
                 clearStats();
+                // Server is down: close Termux too. Short delay so the screen updates first.
+                handler.postDelayed(closeTermuxRunnable, 700L);
             }
             showState(getString(stopped ? R.string.status_stopped : R.string.status_running),
                     stopped ? getString(R.string.msg_stopped_ok) : stdout,
@@ -668,8 +714,8 @@ public class MainActivity extends Activity {
             pid = sp > 0 ? pids.substring(0, sp) : pids;
         }
         String version = nz(kv.get("VERSION"));
+        setLastStarted(nz(kv.get("STARTED")));      // also starts the 1-second uptime ticker
         setStats(nz(kv.get("UPTIME")), pid, version.isEmpty() ? "" : "v" + version);
-        setLastStarted(nz(kv.get("STARTED")));
         updateServerUrl(lastPreview);
         if (purpose != Purpose.START) {
             showState(getString(R.string.status_running), getString(R.string.detail_running), R.color.status_ok);
@@ -755,12 +801,14 @@ public class MainActivity extends Activity {
     // ---- stats row, URL row, last started ----
 
     private void setStats(String uptime, String pid, String version) {
-        uptimeView.setText(uptime.isEmpty() ? DASH : uptime);
+        if (startedEpoch <= 0L) uptimeView.setText(uptime.isEmpty() ? DASH : uptime);
         pidView.setText(pid.isEmpty() ? DASH : pid);
         versionView.setText(version.isEmpty() ? DASH : version);
     }
 
     private void clearStats() {
+        handler.removeCallbacks(uptimeTicker);
+        startedEpoch = 0L;
         setStats("", "", "");
         setLastStarted("");
     }
@@ -772,19 +820,33 @@ public class MainActivity extends Activity {
         } catch (NumberFormatException ignored) {
             // unknown: show a dash
         }
+        handler.removeCallbacks(uptimeTicker);
         if (secs <= 0L) {
+            startedEpoch = 0L;
             lastStartedView.setText(R.string.last_started_none);
             return;
         }
+        startedEpoch = secs;
         String when = new SimpleDateFormat("MMM d, yyyy  \u2022  h:mm a", Locale.getDefault())
                 .format(new Date(secs * 1000L));
         lastStartedView.setText(getString(R.string.last_started, when));
+        uptimeTicker.run();            // shows the uptime now and then ticks every second
+    }
+
+    private static String formatUptime(long secs) {
+        if (secs < 0L) secs = 0L;
+        long h = secs / 3600L;
+        long m = (secs % 3600L) / 60L;
+        long sec = secs % 60L;
+        if (h > 0L) return String.format(Locale.US, "%02dh %02dm", h, m);
+        return String.format(Locale.US, "%dm %02ds", m, sec);
     }
 
     private void updateServerUrl(String previewText) {
         Matcher m = PORT_PATTERN.matcher(nz(previewText));
         if (m.find()) serverPort = m.group(1);
-        urlView.setText("http://127.0.0.1:" + serverPort);
+        urlView.setText(webUiUrl());
+        manifestView.setText(manifestUrl());
     }
 
     private String webUiUrl() {
@@ -805,59 +867,133 @@ public class MainActivity extends Activity {
 
     // ---- live terminal ----
 
+    private SharedPreferences getPrefs() {
+        return getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+    }
+
     private void showPreview(String text) {
         String t = nz(text);
         boolean placeholder = t.equals(getString(R.string.preview_empty))
                 || t.equals(getString(R.string.preview_update_script));
-        boolean live = !placeholder && !t.isEmpty();
-        if (live) {
-            logText = t;
-            if (t.equals(clearedSnapshot)) {
-                previewView.setText("");          // the person cleared this exact output
-            } else {
-                clearedSnapshot = null;
-                previewView.setText(styleLog(t));
-            }
-        } else {
-            logText = "";
+        if (!placeholder && !t.isEmpty()) {
+            addToLog(cleanLines(t));
+            renderLog();
+            setConnected(true);
+            return;
+        }
+        // Nothing live. Keep showing what was already logged (a crash message stays readable).
+        setConnected(false);
+        if (clearedUpTo >= logEntries.size()) {
+            lastWindow = new ArrayList<>();
             SpannableString dim = new SpannableString(t);
             dim.setSpan(new ForegroundColorSpan(getColor(R.color.text_dim)), 0, t.length(),
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             previewView.setText(dim);
         }
-        setConnected(live);
+    }
+
+    /**
+     * Turns the raw tmux text into plain lines. StreamBDIX+ draws boxes and spinners; Android's monospace
+     * font has no glyph for many of them, so they showed up as empty squares. They are removed here.
+     */
+    private List<String> cleanLines(String raw) {
+        List<String> out = new ArrayList<>();
+        for (String line : ANSI_PATTERN.matcher(raw).replaceAll("").split("\r?\n")) {
+            StringBuilder sb = new StringBuilder(line.length());
+            for (int i = 0; i < line.length(); ) {
+                int cp = line.codePointAt(i);
+                i += Character.charCount(cp);
+                if (cp == '\t') {
+                    sb.append(' ');
+                } else if (cp < 0x20 || cp == 0x7F || cp == 0xFFFD
+                        || (cp >= 0x2500 && cp <= 0x25FF)      // box drawing, blocks, geometric shapes
+                        || (cp >= 0x2800 && cp <= 0x28FF)      // braille spinners
+                        || (cp >= 0xE000 && cp <= 0xF8FF)      // private-use icon fonts
+                        || (cp >= 0x200B && cp <= 0x200F)) {   // zero-width marks
+                    sb.append(' ');
+                } else {
+                    sb.appendCodePoint(cp);
+                }
+            }
+            String clean = sb.toString().replaceAll("\\s{2,}", " ").trim();
+            if (clean.isEmpty() || BORDER_ONLY.matcher(clean).matches()) continue;
+            if (clean.length() > MAX_LINE_CHARS) clean = clean.substring(0, MAX_LINE_CHARS);
+            out.add(clean);
+        }
+        return out;
+    }
+
+    /** Adds only the lines that are new since the last look (the tmux window scrolls). */
+    private void addToLog(List<String> window) {
+        int overlap = 0;
+        for (int k = Math.min(lastWindow.size(), window.size()); k > 0; k--) {
+            if (lastWindow.subList(lastWindow.size() - k, lastWindow.size()).equals(window.subList(0, k))) {
+                overlap = k;
+                break;
+            }
+        }
+        String now = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+        for (int i = overlap; i < window.size(); i++) {
+            logEntries.add(new String[]{now, window.get(i)});
+        }
+        lastWindow = window;
+        while (logEntries.size() > MAX_LOG_LINES) {
+            logEntries.remove(0);
+            if (clearedUpTo > 0) clearedUpTo--;
+        }
+    }
+
+    private String visibleLogText() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = clearedUpTo; i < logEntries.size(); i++) {
+            if (sb.length() > 0) sb.append('\n');
+            sb.append('[').append(logEntries.get(i)[0]).append("] ").append(logEntries.get(i)[1]);
+        }
+        return sb.toString();
+    }
+
+    private void renderLog() {
+        SpannableStringBuilder sb = new SpannableStringBuilder();
+        int indent = (int) Math.ceil(previewView.getPaint().measureText("[00:00:00] "));
+        for (int i = clearedUpTo; i < logEntries.size(); i++) {
+            int lineStart = sb.length();
+            String time = "[" + logEntries.get(i)[0] + "] ";
+            String text = logEntries.get(i)[1];
+            sb.append(time).append(text);
+            sb.setSpan(new ForegroundColorSpan(getColor(R.color.terminal_ok)), lineStart,
+                    lineStart + time.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            styleText(sb, text, lineStart + time.length());
+            sb.append('\n');
+            // wrapped text lines up under the message, not under the time
+            sb.setSpan(new LeadingMarginSpan.Standard(0, indent), lineStart, sb.length(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        previewView.setText(sb);
         if (autoScroll) scrollLogToEnd();
     }
 
-    /** Green for success lines, red for errors, cyan underlined for links. */
-    private SpannableString styleLog(String text) {
-        SpannableString sp = new SpannableString(text);
-        int pos = 0;
-        for (String line : text.split("\n", -1)) {
-            int end = pos + line.length();
-            if (end > pos) {
-                String l = line.toLowerCase(Locale.ROOT);
-                int color = 0;
-                if (l.contains("error") || l.contains("failed") || l.contains("exception")
-                        || l.contains("eaddrinuse") || l.contains("not found")) {
-                    color = getColor(R.color.terminal_err);
-                } else if (l.contains("running") || l.contains("success") || l.contains("listening")
-                        || l.contains("started") || l.contains("online") || l.contains("ready")) {
-                    color = getColor(R.color.terminal_ok);
-                }
-                if (color != 0) {
-                    sp.setSpan(new ForegroundColorSpan(color), pos, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                }
-            }
-            pos = end + 1;
+    /** Green for success lines, red for errors, cyan underlined for links. Offsets are into sb. */
+    private void styleText(SpannableStringBuilder sb, String text, int offset) {
+        String l = text.toLowerCase(Locale.ROOT);
+        int color = 0;
+        if (l.contains("error") || l.contains("failed") || l.contains("exception")
+                || l.contains("eaddrinuse") || l.contains("not found")) {
+            color = getColor(R.color.terminal_err);
+        } else if (l.contains("running") || l.contains("success") || l.contains("listening")
+                || l.contains("started") || l.contains("online") || l.contains("ready")) {
+            color = getColor(R.color.terminal_ok);
+        }
+        if (color != 0) {
+            sb.setSpan(new ForegroundColorSpan(color), offset, offset + text.length(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
         Matcher m = URL_PATTERN.matcher(text);
         while (m.find()) {
-            sp.setSpan(new ForegroundColorSpan(getColor(R.color.terminal_link)), m.start(), m.end(),
+            sb.setSpan(new ForegroundColorSpan(getColor(R.color.terminal_link)),
+                    offset + m.start(), offset + m.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            sb.setSpan(new UnderlineSpan(), offset + m.start(), offset + m.end(),
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            sp.setSpan(new UnderlineSpan(), m.start(), m.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
-        return sp;
     }
 
     private void setConnected(boolean connected) {
@@ -870,8 +1006,7 @@ public class MainActivity extends Activity {
     }
 
     private void clearLogs() {
-        if (!logText.isEmpty()) clearedSnapshot = logText;
-        logText = "";
+        clearedUpTo = logEntries.size();
         previewView.setText("");
     }
 

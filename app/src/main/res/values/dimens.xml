@@ -13,6 +13,6 @@
     <dimen name="row_sub_text">14sp</dimen>
     <dimen name="start_title_text">20sp</dimen>
     <dimen name="start_sub_text">14sp</dimen>
-    <dimen name="preview_text">12sp</dimen>
+    <dimen name="preview_text">11sp</dimen>
     <dimen name="log_height">150dp</dimen>
 </resources>

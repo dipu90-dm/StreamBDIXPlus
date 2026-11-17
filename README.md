@@ -155,7 +155,7 @@ To update later: replace the files, then `git add .`, `git commit -m "update"`, 
 | Button | Action |
 |---|---|
 | Start Operation | status check, then start if not running. If it is already running (even if you started it by hand in Termux), it shows "Already running" and reopens Termux on your previous session: no new session, no second instance |
-| Stop Server | confirm, then SIGTERM to the running instance |
+| Stop Server | confirm, then sends SIGTERM to the running StreamBDIX+ instance and closes Termux completely (the Termux app process is ended, so its notification goes away too). Opening the launcher or Termux again brings Termux back. Needs the updated script: it installs itself on first launch after the update |
 | Set up Termux (one-time) | runs the one-line setup command (update, latest Node.js, tmux, allow-external-apps, then the newest StreamBDIX+) and also saves the helper script. If Termux is not yet open to the app, it copies the command and opens Termux so you can paste it |
 | Check status | background check: running state, PIDs, missing Node/npx |
 | Install / update script | writes the bundled script to Termux home |
@@ -169,11 +169,17 @@ The main screen shows:
 - **Server status card**: *Running* with the PID, how long it has been up, the **StreamBDIX+ version it is running** (the
   version npm resolved when you pressed Start) and when it was last started. If it stopped, it shows *Not running* and the
   exit code of the last run. The card changes colour with the state (green, amber, red).
-- **Web UI and manifest**: tap the address to open the local Web UI, tap `/manifest.json` to copy the manifest link for
-  Stremio. The port is read from the server's own output (default `7001`).
-- **Live Terminal**: the last ~10 lines of the StreamBDIX+ terminal, refreshed every few seconds while it runs and
-  whenever you tap Start or Check status. *Copy* copies the lines, *Clear Logs* empties the view, *Auto-scroll* keeps it
-  at the newest line, and the arrow at the top right collapses it. If StreamBDIX+ crashes, the error stays visible.
+- **Web UI and manifest**: tap the first line to open the local Web UI, tap the second (the full
+  `http://127.0.0.1:7001/manifest.json` link) to copy it for Stremio. The text shrinks to fit. The port is read from the
+  server's own output (default `7001`).
+- **Uptime and Last Started** come from a start time the helper script writes when it launches StreamBDIX+ (not from
+  `/proc`, whose clocks disagree on Android after the device slept). Uptime counts up every second in the app.
+- **Live Terminal**: plain text lines, each with a time stamp, in the style of the design: green times, white text,
+  green success lines, red errors and cyan links. It refreshes every few seconds and keeps a history. The time is when the
+  launcher first saw the line (so it can be a few seconds after the server printed it). Box-drawing characters, spinners
+  and icon-font glyphs that Android cannot draw (they appeared as empty boxes) are removed, and long lines wrap under the
+  message. *Copy* copies the lines, *Clear Logs* empties the view, *Auto-scroll* keeps it at the newest line, and the arrow
+  at the top right collapses it. If StreamBDIX+ crashes, the error stays visible.
 
 The terminal works when StreamBDIX+ runs inside **tmux**, which is the case whenever you press **Start Operation** in the app
 (tmux is installed by the one-line command). Android does not let one app read another app's terminal, so a copy
@@ -184,7 +190,8 @@ tmux new-session -A -s streambdixplus "npx --yes --package=streambdixplus@latest
 ```
 (Detach with Ctrl+b then d and it keeps running.)
 
-After updating the app, tap **Install / update script** once so Termux gets the new script (it reports the version and start time).
+After an app update, the launcher installs the matching helper script into Termux by itself the first time you open it (the
+**Install / update script** row still does it on demand).
 
 ## Which version runs?
 Nothing is pinned. When you press Start, the helper script runs `npm view streambdixplus version` to read the newest
@@ -221,7 +228,8 @@ shows either the Termux session or a clear message.
 | "No answer from Termux" / "Termux reported an error" | Tap **Set up Termux (one-time)** (or run the one-line command) and restart Termux (`allow-external-apps` must be set). |
 | "script was not found" | Tap Install / update script. |
 | "Node.js is not installed" / "npx not found" | In Termux: `pkg install nodejs`. |
-| Start still runs an old version | Tap **Install / update script** once so the script that looks up the newest version is installed. |
+| Start still runs an old version, or uptime shows a dash | Tap **Install / update script** so the current helper script is installed, then press Start Operation again (a server started before the update has no start time recorded). |
+| Empty squares in the terminal | Fixed in 1.5.1: unsupported box/spinner characters are stripped. Install / update script as well, so lines are no longer cut in the middle of a character. |
 | `nodejs-lts` / `nodejs` conflict | Run `pkg uninstall nodejs-lts` and then `pkg install nodejs`. |
 | CR / `$'\r': command not found` in Termux | CRLF line endings. Tap Install / update script (the app writes LF) or run `sed -i 's/\r$//' ~/start-streambdixplus.sh`. |
 | Termux gets killed in the background | Acquire wakelock, set battery to Unrestricted, or use the `dumpsys deviceidle` command above. |

@@ -7,8 +7,8 @@
     <color name="border">#2B3470</color>
     <color name="terminal_bg">#0A0E2A</color>
     <color name="terminal_black">#000000</color>
-    <color name="terminal_text">#E8ECF8</color>
-    <color name="terminal_ok">#2BE67E</color>
+    <color name="terminal_text">#FFFFFF</color>
+    <color name="terminal_ok">#18F062</color>
     <color name="terminal_link">#22D3EE</color>
     <color name="terminal_err">#FF6B7A</color>
     <color name="text">#FFFFFF</color>
