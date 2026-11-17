@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_top">#0B0D2E</color>
+    <color name="bg_mid">#05070F</color>
+    <color name="bg_bottom">#0D0630</color>
+    <color name="card">#0F1433</color>
+    <color name="border">#2B3470</color>
+    <color name="terminal_bg">#0A0E2A</color>
+    <color name="terminal_black">#000000</color>
+    <color name="terminal_text">#E8ECF8</color>
+    <color name="terminal_ok">#2BE67E</color>
+    <color name="terminal_link">#22D3EE</color>
+    <color name="terminal_err">#FF6B7A</color>
+    <color name="text">#FFFFFF</color>
+    <color name="text_dim">#9AA6C9</color>
+    <color name="accent">#8B7CFF</color>
+    <color name="focus_ring">#C7D2FE</color>
+    <color name="divider">#33FFFFFF</color>
+
+    <color name="status_neutral">#B8C4F0</color>
+    <color name="status_ok">#22E57A</color>
+    <color name="status_warn">#FBBF24</color>
+    <color name="status_error">#FF6B7A</color>
+    <color name="status_accent">#8B7CFF</color>
+    <color name="on_status">#04210F</color>
+
+    <color name="primary_start">#3B82F6</color>
+    <color name="primary_end">#8B2CF5</color>
+    <color name="primary_focus_start">#5B9BFF</color>
+    <color name="primary_focus_end">#A24BFF</color>
+    <color name="primary_pressed_start">#2563EB</color>
+    <color name="primary_pressed_end">#6D1FD6</color>
+    <color name="on_primary">#FFFFFF</color>
+
+    <color name="secondary_bg">#1A2050</color>
+    <color name="secondary_pressed">#262E6E</color>
+    <color name="row_pressed">#1A2050</color>
+    <color name="row_focus">#1A2050</color>
+    <color name="pill_bg">#141A3F</color>
+    <color name="pill_version_bg">#2D2380</color>
+
+    <color name="danger">#FF7A9C</color>
+    <color name="danger_bg">#3A0F26</color>
+    <color name="danger_border">#F0527C</color>
+    <color name="danger_pressed">#2A0B1C</color>
+    <color name="danger_focus">#4A1430</color>
+
+    <color name="row_purple">#2D2380</color>
+    <color name="row_blue">#16358F</color>
+    <color name="row_green">#0E5236</color>
+
+    <color name="dot_red">#F87171</color>
+    <color name="dot_yellow">#FBBF24</color>
+    <color name="dot_green">#34D399</color>
+</resources>

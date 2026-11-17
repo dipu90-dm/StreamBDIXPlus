@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StreamBDIX+</string>
+    <string name="header_title">StreamBDIX+</string>
+    <string name="app_tagline">Launcher for Termux</string>
+
+    <string name="btn_start">Start Operation</string>
+    <string name="btn_status">Check status</string>
+    <string name="btn_stop">Stop Server</string>
+    <string name="btn_setup">Set up Termux (one-time)</string>
+    <string name="btn_install">Install / update script</string>
+    <string name="btn_termux">Open Termux</string>
+
+    <string name="status_idle">Ready</string>
+    <string name="status_working">Working…</string>
+    <string name="status_running">Running</string>
+    <string name="status_stopped">Not running</string>
+    <string name="status_starting">Starting</string>
+    <string name="status_error">Problem</string>
+
+    <string name="detail_idle">Press Start to launch StreamBDIX+ inside Termux. First time? Tap Set up Termux.</string>
+    <string name="detail_running">StreamBDIX+ is online and ready!</string>
+    <string name="detail_uptime">Up for %1$s</string>
+    <string name="detail_last_exit">The last run ended with exit code %1$s. Press Start to run it again.</string>
+    <string name="preview_title">Termux screen</string>
+    <string name="preview_empty">No live output yet. Press Start Operation: the output shows here once StreamBDIX+ runs inside tmux.</string>
+    <string name="preview_update_script">Tap Install / update script to enable the live preview.</string>
+    <string name="msg_busy">Still waiting for Termux…</string>
+    <string name="msg_starting">Opening Termux. It checks npm for the newest StreamBDIX+ and starts it. A second instance is never started.</string>
+    <string name="msg_attached">Already running (PID: %1$s). Opening your previous Termux session; no new session was started. If Termux shows a different session, swipe in from its left edge, or run: tmux attach -t streambdixplus</string>
+    <string name="msg_already_other">Already running (PID: %1$s). Opening your previous Termux session; no new session was started. If Termux shows a different session, swipe in from its left edge and pick the one running StreamBDIX+.</string>
+    <string name="msg_permission_needed">Permission needed: tap Start and follow the steps shown.</string>
+    <string name="toast_already_running">StreamBDIX+ is already running. Opening the previous Termux session…</string>
+    <string name="msg_install_ok">Script installed to ~/start-streambdixplus.sh in Termux.</string>
+
+    <string name="confirm_stop_title">Stop StreamBDIX+?</string>
+    <string name="confirm_stop_msg">This sends SIGTERM to the running StreamBDIX+ process.</string>
+
+    <!-- one-time setup -->
+    <string name="msg_setup_probing">Checking whether Termux accepts commands from this app…</string>
+    <string name="msg_setup_started">Setup is running in Termux. It can take a few minutes, so keep Termux open until it asks you to press Enter. Afterwards, close and reopen Termux once.</string>
+    <string name="setup_manual_title">Run the setup in Termux</string>
+    <string name="setup_manual_msg">%1$s\n\nThe command below was copied to the clipboard. Tap Open Termux, paste it (long-press the screen and choose Paste, or press Ctrl+Shift+V on a keyboard) and press Enter.\n\nWhen it finishes, fully close and reopen Termux, then come back here and tap Install / update script.</string>
+    <string name="setup_why_permission">This app does not have the Termux RUN_COMMAND permission yet, so it cannot type into Termux for you.</string>
+    <string name="setup_why_blocked">Termux does not accept commands from this app yet (allow-external-apps is not enabled). The command below turns it on.</string>
+    <string name="toast_copied">Command copied</string>
+
+    <!-- permission help (Android TV often hides the system dialog) -->
+    <string name="perm_title">Permission needed</string>
+    <string name="perm_msg">StreamBDIX+ Launcher needs the Termux RUN_COMMAND permission. Some TV boxes do not show the system dialog or its Allow button, so pick any way below.\n\n• Show the dialog again.\n• Open app settings and switch the permission on (not every TV has this screen).\n• No PC needed: copy the command below, paste it into Termux and press Enter. It grants the permission through adb on this device. Turn on USB debugging in Developer options first, and choose Always allow if Android asks. Run it a second time if it said unauthorized.</string>
+    <string name="perm_not_defined_note">Note: Android does not know the Termux permission yet. If you installed this launcher before Termux, uninstall and reinstall the launcher, then try again.\n\n</string>
+    <string name="act_open_termux">Open Termux</string>
+    <string name="act_copy_again">Copy command again</string>
+    <string name="act_close">Close</string>
+    <string name="act_cancel">Cancel</string>
+    <string name="act_try_again">Show the permission dialog again</string>
+    <string name="act_app_settings">Open app settings</string>
+    <string name="act_copy_selfgrant">Copy command and open Termux</string>
+    <string name="err_settings_missing">This device has no app-settings screen. Use the command in Termux instead.</string>
+
+    <string name="err_termux_missing">Termux is not installed. Install Termux from F-Droid or the official GitHub releases, open it once, then come back.</string>
+    <string name="err_permission_denied">The permission com.termux.permission.RUN_COMMAND was not granted.</string>
+    <string name="err_service_missing">Termux RunCommandService was not found. Your Termux build is too old or not the official one. Update Termux from F-Droid or GitHub.</string>
+    <string name="err_security">Android refused the request to Termux (SecurityException). Make sure the RUN_COMMAND permission is granted. If this launcher was installed before Termux, reinstall the launcher.</string>
+    <string name="err_not_allowed_now">Android blocked starting the Termux service from the background. Bring this app to the foreground and try again.</string>
+    <string name="err_termux_failed">Termux reported an error: %1$s\n\nTap Set up Termux (one-time) to enable allow-external-apps, then restart Termux.</string>
+    <string name="err_script_missing">~/start-streambdixplus.sh was not found in Termux. Tap Install / update script.</string>
+    <string name="err_node_missing">Node.js is not installed in Termux. Tap Set up Termux (one-time), or in Termux run: pkg install nodejs</string>
+    <string name="err_npx_missing">npx was not found in Termux. It ships with npm. Tap Set up Termux (one-time), or in Termux run: pkg install nodejs</string>
+    <string name="err_no_result">Termux returned no result. Update Termux to a recent version.</string>
+    <string name="err_timeout">No answer from Termux within 15 seconds. Tap Set up Termux (one-time) to enable allow-external-apps, restart Termux, and make sure Android is not battery-restricting it.</string>
+    <string name="err_script_failed">The script exited with code %1$d.\n%2$s</string>
+    <string name="err_unexpected">Unexpected answer from the Termux script:\n%1$s</string>
+    <string name="err_install_failed">Could not write the script: %1$s</string>
+    <string name="err_asset">Could not read the bundled script: %1$s</string>
+
+    <!-- redesigned UI -->
+    <string name="btn_start_sub">Run: npx streambdixplus@latest</string>
+    <string name="btn_stop_sub">Terminate the process</string>
+    <string name="btn_setup_sub">Prepare Termux environment</string>
+    <string name="btn_install_sub">Get the latest StreamBDIX+ script</string>
+    <string name="btn_status_sub">Verify server health and status</string>
+    <string name="btn_termux_sub">Launch Termux terminal</string>
+    <string name="act_stop">Stop</string>
+    <string name="cd_settings">Settings</string>
+    <string name="cd_info">About</string>
+    <string name="cd_collapse">Show or hide the live terminal</string>
+    <string name="server_status">SERVER STATUS</string>
+    <string name="stat_uptime">Uptime</string>
+    <string name="stat_pid">PID</string>
+    <string name="stat_version">Version</string>
+    <string name="url_manifest">/manifest.json</string>
+    <string name="last_started">Last Started:  %1$s</string>
+    <string name="last_started_none">Last Started:  \u2014</string>
+    <string name="term_title">Live Terminal</string>
+    <string name="term_connected">Connected</string>
+    <string name="term_disconnected">No session</string>
+    <string name="btn_copy">Copy</string>
+    <string name="btn_clear">Clear Logs</string>
+    <string name="auto_scroll">Auto-scroll</string>
+    <string name="footer_title">StreamBDIX+ Launcher v%1$s</string>
+    <string name="footer_sub">Powered by Termux  \u2022  Built for StreamBDIX+</string>
+    <string name="msg_stopped_ok">StreamBDIX+ was stopped.</string>
+    <string name="toast_log_copied">Logs copied</string>
+    <string name="toast_manifest_copied">Manifest link copied. Paste it into Stremio.</string>
+    <string name="toast_no_browser">No browser found on this device.</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_msg">Always installs and runs the newest StreamBDIX+ published on npm (npx streambdixplus@latest), with the newest Node.js from Termux (pkg install nodejs).</string>
+    <string name="act_copy_setup">Copy setup command</string>
+    <string name="act_reinstall">Reinstall helper script</string>
+    <string name="about_title">StreamBDIX+ Launcher</string>
+    <string name="about_msg">Version %1$s\n\nA small launcher for StreamBDIX+ that runs inside Termux. Each Start checks npm for the newest streambdixplus release and runs exactly that version, so there is nothing to update by hand.\n\nThe server is local only: %2$s</string>
+</resources>

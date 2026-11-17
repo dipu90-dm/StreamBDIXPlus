@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/btnStart"
+        style="@style/BigAction"
+        android:layout_marginTop="0dp"
+        android:background="@drawable/button_primary">
+
+        <requestFocus />
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:contentDescription="@null"
+            android:padding="6dp"
+            android:src="@drawable/ic_play"
+            android:tint="@color/on_primary" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/btn_start"
+                android:textColor="@color/on_primary"
+                android:textSize="@dimen/start_title_text"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvStartSub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:maxLines="1"
+                android:text="@string/btn_start_sub"
+                android:textColor="#DCE4FF"
+                android:textSize="@dimen/start_sub_text" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_chevron"
+            android:tint="@color/on_primary" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/btnStop"
+        style="@style/BigAction"
+        android:background="@drawable/button_danger">
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:contentDescription="@null"
+            android:padding="8dp"
+            android:src="@drawable/ic_stop"
+            android:tint="@color/danger" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/btn_stop"
+                android:textColor="@color/danger"
+                android:textSize="@dimen/start_title_text"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif"
+                android:text="@string/btn_stop_sub"
+                android:textColor="@color/danger"
+                android:textSize="@dimen/start_sub_text" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_chevron"
+            android:tint="@color/danger" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:background="@drawable/card"
+        android:clipToOutline="true"
+        android:orientation="vertical"
+        android:padding="1dp">
+
+        <LinearLayout
+            android:id="@+id/btnSetup"
+            style="@style/RowItem">
+
+            <ImageView
+                style="@style/RowIcon"
+                android:backgroundTint="@color/row_purple"
+                android:src="@drawable/ic_gear"
+                android:tint="#B9AEFF" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/RowTitle"
+                    android:text="@string/btn_setup" />
+
+                <TextView
+                    style="@style/RowSub"
+                    android:text="@string/btn_setup_sub" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron"
+                android:tint="@color/text_dim" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:background="@color/border" />
+
+        <LinearLayout
+            android:id="@+id/btnInstall"
+            style="@style/RowItem">
+
+            <ImageView
+                style="@style/RowIcon"
+                android:backgroundTint="@color/row_blue"
+                android:src="@drawable/ic_install"
+                android:tint="#9CC0FF" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/RowTitle"
+                    android:text="@string/btn_install" />
+
+                <TextView
+                    style="@style/RowSub"
+                    android:text="@string/btn_install_sub" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron"
+                android:tint="@color/text_dim" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:background="@color/border" />
+
+        <LinearLayout
+            android:id="@+id/btnStatus"
+            style="@style/RowItem">
+
+            <ImageView
+                style="@style/RowIcon"
+                android:backgroundTint="@color/row_green"
+                android:src="@drawable/ic_status"
+                android:tint="#7CF2B4" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/RowTitle"
+                    android:text="@string/btn_status" />
+
+                <TextView
+                    style="@style/RowSub"
+                    android:text="@string/btn_status_sub" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron"
+                android:tint="@color/text_dim" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:background="@color/border" />
+
+        <LinearLayout
+            android:id="@+id/btnTermux"
+            style="@style/RowItem">
+
+            <ImageView
+                style="@style/RowIcon"
+                android:backgroundTint="@color/row_purple"
+                android:src="@drawable/ic_terminal"
+                android:tint="#B9AEFF" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/RowTitle"
+                    android:text="@string/btn_termux" />
+
+                <TextView
+                    style="@style/RowSub"
+                    android:text="@string/btn_termux_sub" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_chevron"
+                android:tint="@color/text_dim" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

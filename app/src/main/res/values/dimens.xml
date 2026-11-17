@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="content_padding_h">16dp</dimen>
+    <dimen name="land_padding_h">28dp</dimen>
+    <dimen name="button_height">72dp</dimen>
+    <dimen name="row_height">76dp</dimen>
+    <dimen name="logo_size">64dp</dimen>
+    <dimen name="title_text">30sp</dimen>
+    <dimen name="status_text">30sp</dimen>
+    <dimen name="detail_text">13sp</dimen>
+    <dimen name="body_text">16sp</dimen>
+    <dimen name="row_title_text">18sp</dimen>
+    <dimen name="row_sub_text">14sp</dimen>
+    <dimen name="start_title_text">20sp</dimen>
+    <dimen name="start_sub_text">14sp</dimen>
+    <dimen name="preview_text">12sp</dimen>
+    <dimen name="log_height">150dp</dimen>
+</resources>
