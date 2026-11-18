@@ -279,3 +279,5 @@ project was reviewed against; check the release notes of a newer version before 
 - The GitHub Actions build job has read-only repository permissions; release publishing runs in a separate tag-only job with write permission.
 
 The source connectors still contact their configured third-party endpoints. Several configured BDIX endpoints use plain HTTP, so traffic to those endpoints is not encrypted. This is an upstream service limitation and is not changed by the local API hardening.
+
+“Stremio addon”, “BDIX”, “Android TV”, “Termux”
