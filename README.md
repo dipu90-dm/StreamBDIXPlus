@@ -76,7 +76,21 @@ Notes:
 ### Step 3: Install the launcher APK
 Download `StreamBDIX+.apk` (see "Build the APK on GitHub" below), then follow the section for your device.
 
-### Step 4: First run
+### Step 4: Download & install Stremio
+1. Download **Stremio** from [stremio.com](https://www.stremio.com/), then install it on your device.
+2. Create a Stremio account.
+3. Open Stremio, go to **Addons**, and click **Add Addon**. Paste the following URL and install the addon:
+
+```
+http://127.0.0.1:7001/manifest.json
+```
+
+> **Important note**
+> This addon cannot be added directly from platforms other than a PC.
+> First, create or log in to your Stremio account on your PC and install the addon there. Once installed, simply log in with the same Stremio account on your other devices (Android TV, Android, etc.). The addon will automatically sync across all your devices.
+
+
+### Step 5: First run
 1. Open **StreamBDIX+ Launcher** and tap **Install / update script**. This writes `~/start-streambdixplus.sh` into Termux.
 2. Tap **Start** (or **Check status**) and **allow** the Termux RUN_COMMAND permission when asked.
 3. Tap **Start Operation**. Termux opens, asks npm for the newest `streambdixplus` version, and runs exactly that one.
@@ -90,6 +104,7 @@ Download `StreamBDIX+.apk` (see "Build the APK on GitHub" below), then follow th
 4. Open the launcher and follow "First run".
 5. Keep Termux alive: in Termux's notification tap **Acquire wakelock**, and set Termux to **Unrestricted** battery use
    (Settings > Apps > Termux > Battery).
+6. Open Stremio and enjoy your desired content.
 
 ## Run on an Android TV / TV box
 TV boxes usually have no touchscreen, so use a remote (D-pad) and, for typing, a USB or Bluetooth keyboard
