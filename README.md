@@ -89,6 +89,29 @@ http://127.0.0.1:7001/manifest.json
 > This addon cannot be added directly from platforms other than a PC.
 > First, create or log in to your Stremio account on your PC and install the addon there. Once installed, simply log in with the same Stremio account on your other devices (Android TV, Android, etc.). The addon will automatically sync across all your devices.
 
+### Alternative Installation Method (Stremio Web – PC & Mobile)
+
+If you're having trouble installing the addon using the regular method, you can try installing it through [Stremio Web](https://web.stremio.com/).
+
+**On PC (Windows / macOS / Linux):**
+
+1. Open [Stremio Web](https://web.stremio.com/) in your browser.
+2. Sign in to your Stremio account.
+3. Open the **StreamBDIXPlus addon installation link** in a new browser tab.
+4. If prompted, click **Install** or **Allow** to add the addon.
+5. Return to Stremio Web and navigate to **Settings → Add-ons** to verify the installation.
+
+**On Mobile (Android / iOS):**
+
+1. Open your mobile browser (Chrome, Safari, etc.).
+2. Visit [Stremio Web](https://web.stremio.com/).
+3. Sign in to your Stremio account.
+4. Open the **StreamBDIXPlus addon installation link** in the same browser.
+5. If prompted, allow the addon to be installed.
+6. Check **Settings → Add-ons** to confirm that the addon has been added.
+
+**Note:** Stremio Web installation may not work on every device or browser. If the installation fails, try using a different browser or the regular Stremio app installation method.
+
 
 ### Step 5: First run
 1. Open **StreamBDIX+ Launcher** and tap **Install / update script**. This writes `~/start-streambdixplus.sh` into Termux.
